@@ -1,0 +1,19 @@
+  1/1 Mean: 0.000 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0:33:16 0:00:00
+adhoc • mini-swe-agent-local • gpt-5.6-luna
+┏━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━┓
+┃ Trials ┃ Exceptions ┃  Mean ┃
+┡━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━┩
+│      0 │          0 │ 0.000 │
+└────────┴────────────┴───────┘
+
+Job Info
+Total runtime: 33m 16s
+Results written to 
+/Users/syoonj./W2Y/CU_SWdev_AI/course_milestone_2/tasks/slack-clone-course/jobs/
+2026-11-13__21-46-51_r3-2/result.json
+Inspect results by running `harbor view 
+/Users/syoonj./W2Y/CU_SWdev_AI/course_milestone_2/tasks/slack-clone-course/jobs`
+Share results by running `harbor upload 
+/Users/syoonj./W2Y/CU_SWdev_AI/course_milestone_2/tasks/slack-clone-course/jobs/
+2026-11-13__21-46-51_r3-2`
+

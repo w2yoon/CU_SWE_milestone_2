@@ -1,0 +1,30 @@
+=== d_1
+PASS D1.1 health + node_id on 3 nodes
+PASS D1.2 redis answers PING on 6379
+PASS D1.3 invalid-token WebSocket rejected
+PASS D1.4 nodes 8000/8002 serve reads+writes while 8001 is dead
+PASS D1.5 8001 back within 10 s and sees outage writes
+PASS D1.6 redis respawned within 5 s after SIGKILL
+RESULT: 6 passed, 0 failed
+=== d_2
+PASS D2.1 sockets on 8000/8002 survive killing 8001
+PASS D2.2 writes 201 while 8001 down; both subscribers get dense ids
+PASS D2.3 resume on 8002 replays both, then resumed
+PASS D2.4 after 8000 dies, resume on 8001 gets the 2 missed events
+PASS D2.5 post on restarted 8001 reaches subscriber on 8002 live
+PASS D2.6 same head_event_id on all three nodes
+RESULT: 6 passed, 0 failed
+=== d_3
+PASS D3.1 writes on all nodes succeed within 5 s of redis kill
+PASS D3.2 both subscribers receive all 3 frames
+PASS D3.3 ids dense and identical across sockets
+PASS D3.4 redis respawned within 5 s
+PASS D3.5 fan-out after respawn
+RESULT: 5 passed, 0 failed
+=== d_4
+PASS D4.1 all 75 concurrent POSTs -> 201
+PASS D4.2 each subscriber got >= 99% of frames (frames carry message.body)
+PASS D4.3 median latency <= 300 ms per subscriber
+PASS D4.4 p95 latency <= 800 ms per subscriber
+PASS D4.5 ids strictly increasing per subscriber
+RESULT: 5 passed, 0 failed

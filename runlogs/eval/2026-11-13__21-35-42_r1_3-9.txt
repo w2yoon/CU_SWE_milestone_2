@@ -1,0 +1,56 @@
+=== e_1
+PASS E1.1 author edits -> 200, edited_at set
+PASS E1.2 history shows edit
+PASS E1.3 non-author (even owner) edit -> 403
+PASS E1.4 blank 400 / unknown 404 / no token 401
+PASS E1.5 author deletes -> 200 deleted
+PASS E1.6 delete idempotent
+PASS E1.7 deleted gone from history; reply_count drops
+PASS E1.8 edit deleted message -> 409
+PASS E1.9 owner deletes other's 200 / plain member 403
+PASS E1.10 WS message.updated (message) + message.deleted (message_id), dense
+PASS E1.11 edit/delete in archived channel -> 423
+RESULT: 11 passed, 0 failed
+=== e_2
+PASS E2.1 registration -> 001..005 then 422
+PASS E2.2 bad or missing PASS -> 464
+PASS E2.3 nick collision -> 433, connection stays, retry registers
+PASS E2.4 PING -> PONG :abc
+PASS E2.5 unknown command -> 421
+PASS E2.7 PONG/MODE/WHO/LIST/NAMES/TOPIC accepted (no 421)
+PASS E2.6 QUIT closes without error numeric
+RESULT: 7 passed, 0 failed
+=== e_3
+PASS E3.1 JOIN echo, then 353, then 366
+PASS E3.2 hyphenated/unknown channel -> 403
+PASS E3.3 IRC PRIVMSG stored as a message by the IRC user
+PASS E3.4 IRC + web writes share a dense event_id stream
+PASS E3.5 web post fans out to IRC as :nick!user@host PRIVMSG
+PASS E3.5b no echo of own PRIVMSG
+PASS E3.6 NAMES/WHO/LIST/MODE/TOPIC accepted; TOPIC -> 331/332
+PASS E3.7 IRC bridge survives a killed HTTP node (both directions)
+RESULT: 8 passed, 0 failed
+=== e_4
+PASS E4.1 GET / -> 200 text/html on 3 nodes
+PASS E4.2 initial HTML has every static data-testid and DOM id
+PASS E4.3 data-button-role on every pinned button
+PASS E4.4 computed button colours match roles
+PASS E4.5 auth modal visible; toggle login<->register
+PASS E4.6 invalid sign-up shows visible error
+PASS E4.7 valid sign-up auto-logs in
+PASS E4.8 create workspace from empty state; #general listed and selected
+FAIL E4.9 create channel via modal; duplicate shows error: Locator.fill: Timeout 3000ms exceeded.
+FAIL E4.10 switch channel updates header: Locator.click: Timeout 3000ms exceeded.
+FAIL E4.11 logout + login restores the same workspace: Locator.click: Timeout 3000ms exceeded.
+RESULT: 8 passed, 3 failed
+=== e_5
+PASS E5.1 empty channel shows non-blank copy
+PASS E5.2 send message; row has avatar/author/time/body
+PASS E5.3 blank message is not sent
+PASS E5.4 message survives hard reload
+PASS E5.5 edit via hover toolbar; (edited) shown, survives reload
+PASS E5.6 delete via hover toolbar, no dialog, survives reload
+PASS E5.7 emoji-picker grid -> reaction chip with count 1; click removes
+FAIL E5.8 thread panel on the right; reply bumps 'N replies': Locator.wait_for: Timeout 3000ms exceeded.
+PASS E5.9 message from another user appears without reload
+RESULT: 8 passed, 1 failed

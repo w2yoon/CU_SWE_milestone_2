@@ -1,0 +1,158 @@
+=== c_1
+PASS C1.1 first reaction -> 200 {reactions}
+PASS C1.2 same reaction again is idempotent
+PASS C1.3 second user: 👍 count 2, 🎉 separate
+PASS C1.4 history carries reactions
+PASS C1.5 remove reaction -> 200, emoji with 0 disappears
+PASS C1.6 no token 401 / unknown message 404 / empty emoji 400
+PASS C1.7 non-member reacts in private channel -> 403
+FAIL C1.8 WS gets reaction.added x3 then reaction.removed, dense ids, fields: ([], [])
+PASS C1.9 reaction in archived channel -> 423
+PASS C1.10 create DM -> 200 {channel_id}
+PASS C1.11 same DM id both directions and repeated
+PASS C1.12 DM unknown user 404 / missing 400 / no token 401
+PASS C1.13 DM members post 201 and read 200
+PASS C1.14 third user cannot read/post DM -> 403
+RESULT: 13 passed, 1 failed
+=== c_2
+PASS C2.1 upload -> 201 FileObj
+PASS C2.2 file metadata on another node
+PASS C2.3 unknown file -> 404
+PASS C2.4 download bytes + Content-Type + Content-Disposition
+PASS C2.5 upload > 10 MiB -> 413
+PASS C2.6 no file part 400 / no token 401
+PASS C2.7 attach own file -> 201, message.files, also in history
+PASS C2.8 attach the same file again -> 400
+PASS C2.9 someone else's / unknown / non-list file_ids -> 400
+RESULT: 9 passed, 0 failed
+=== c_3
+PASS C3.1 /me keeps literal body
+PASS C3.2 /me without text -> 400
+PASS C3.3 /shrug text appends emoticon
+PASS C3.4 /shrug alone
+PASS C3.5 /topic -> 201 message:null channel.topic; >250 -> 400
+PASS C3.6 /invite -> 201 invited_user, now member; unknown -> 404
+PASS C3.9 /archive by non-owner -> 403
+PASS C3.7 /archive -> 201 channel archived, then post 423
+PASS C3.8 /unarchive while archived -> 201 is_archived false
+PASS C3.10 unknown command -> 400
+PASS C3.11 //literal posted as-is
+RESULT: 11 passed, 0 failed
+=== c_4
+PASS C4.1 member creates group -> 201 GroupObj
+PASS C4.2 dup handle 409 / bad handle 400 / missing name 400
+PASS C4.3 outsider 403 / no token 401 / unknown slug 404
+PASS C4.4 list groups
+PASS C4.5 creator patches group
+PASS C4.6 other member 403 / owner 200 / unknown 404
+PASS C4.7 delete: other 403 / creator 200 deleted / again 200
+PASS C4.8 @group -> members in channel, minus author
+PASS C4.9 group + username deduped
+PASS C4.10 @here -> connected members only, minus author
+FAIL C4.11 @here after socket closed -> []: expected 201, got 201 [10]
+RESULT: 10 passed, 1 failed
+=== c_5
+PASS C5.1 get user -> UserObj
+PASS C5.2 unknown 404 / no token 401
+PASS C5.3 patch profile, persisted across nodes
+FAIL C5.7 user.updated broadcast to an unsubscribed socket on another node, no channel_id/event_id: []
+PASS C5.4 partial patch keeps other fields
+PASS C5.5 invalid timezone -> 400
+PASS C5.6 length/type violations -> 400, nothing saved
+RESULT: 6 passed, 1 failed
+=== e_1
+PASS E1.1 author edits -> 200, edited_at set
+PASS E1.2 history shows edit
+PASS E1.3 non-author (even owner) edit -> 403
+PASS E1.4 blank 400 / unknown 404 / no token 401
+PASS E1.5 author deletes -> 200 deleted
+PASS E1.6 delete idempotent
+PASS E1.7 deleted gone from history; reply_count drops
+PASS E1.8 edit deleted message -> 409
+PASS E1.9 owner deletes other's 200 / plain member 403
+FAIL E1.10 WS message.updated (message) + message.deleted (message_id), dense: []
+PASS E1.11 edit/delete in archived channel -> 423
+RESULT: 10 passed, 1 failed
+=== e_2
+PASS E2.1 registration -> 001..005 then 422
+PASS E2.2 bad or missing PASS -> 464
+PASS E2.3 nick collision -> 433, connection stays, retry registers
+PASS E2.4 PING -> PONG :abc
+PASS E2.5 unknown command -> 421
+PASS E2.7 PONG/MODE/WHO/LIST/NAMES/TOPIC accepted (no 421)
+PASS E2.6 QUIT closes without error numeric
+RESULT: 7 passed, 0 failed
+=== e_3
+FAIL E3.1 JOIN echo, then 353, then 366: [':irc 403 u0x55316068 #w55316068/c55316068 :No such channel']
+PASS E3.2 hyphenated/unknown channel -> 403
+FAIL E3.3 IRC PRIVMSG stored as a message by the IRC user: []
+FAIL E3.4 IRC + web writes share a dense event_id stream: (0, [])
+FAIL E3.5 web post fans out to IRC as :nick!user@host PRIVMSG: []
+PASS E3.5b no echo of own PRIVMSG
+FAIL E3.6 NAMES/WHO/LIST/MODE/TOPIC accepted; TOPIC -> 331/332: [':irc 366 u0x55316068 #w55316068/c55316068 :End of NAMES list']
+FAIL E3.7 IRC bridge survives a killed HTTP node (both directions): ([], ['after kill', 'hi irc'])
+RESULT: 2 passed, 6 failed
+=== e_4
+PASS E4.1 GET / -> 200 text/html on 3 nodes
+FAIL E4.2 initial HTML has every static data-testid and DOM id: missing ['channel-topic-input', 'create-channel-private', 'invitations-list']
+PASS E4.3 data-button-role on every pinned button
+PASS E4.4 computed button colours match roles
+FAIL E4.5 auth modal visible; toggle login<->register: modes [None, None, None]
+FAIL E4.6 invalid sign-up shows visible error: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E4.7 valid sign-up auto-logs in: Locator.fill: Timeout 3000ms exceeded.
+FAIL E4.8 create workspace from empty state; #general listed and selected: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E4.9 create channel via modal; duplicate shows error: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E4.10 switch channel updates header: Locator.click: Timeout 3000ms exceeded.
+FAIL E4.11 logout + login restores the same workspace: Page.wait_for_function: Timeout 3000ms exceeded.
+RESULT: 3 passed, 8 failed
+=== e_5
+FAIL E5.1 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.2 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.3 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.4 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.5 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.6 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.7 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.8 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.9 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+RESULT: 0 passed, 9 failed
+=== d_1
+PASS D1.1 health + node_id on 3 nodes
+PASS D1.2 redis answers PING on 6379
+PASS D1.3 invalid-token WebSocket rejected
+PASS D1.4 nodes 8000/8002 serve reads+writes while 8001 is dead
+PASS D1.5 8001 back within 10 s and sees outage writes
+PASS D1.6 redis respawned within 5 s after SIGKILL
+RESULT: 6 passed, 0 failed
+=== d_2
+PASS D2.1 sockets on 8000/8002 survive killing 8001
+FAIL D2.2 writes 201 while 8001 down; both subscribers get dense ids: ([201, 201], [], [])
+FAIL D2.3 resume on 8002 replays both, then resumed: ['resumed']
+FAIL D2.4 after 8000 dies, resume on 8001 gets the 2 missed events: ([201, 201], ['resumed'])
+FAIL D2.5 post on restarted 8001 reaches subscriber on 8002 live: []
+PASS D2.6 same head_event_id on all three nodes
+RESULT: 2 passed, 4 failed
+=== d_3
+PASS D3.1 writes on all nodes succeed within 5 s of redis kill
+FAIL D3.2 both subscribers receive all 3 frames: ([], [])
+FAIL D3.3 ids dense and identical across sockets: (0, [], [])
+PASS D3.4 redis respawned within 5 s
+FAIL D3.5 fan-out after respawn: ([], [])
+RESULT: 2 passed, 3 failed
+=== d_4
+PASS D4.1 all 75 concurrent POSTs -> 201
+FAIL D4.2 each subscriber got >= 99% of frames (frames carry message.body): [0, 0, 0]
+FAIL D4.3 median latency <= 300 ms per subscriber: median ms [9999, 9999, 9999]
+FAIL D4.4 p95 latency <= 800 ms per subscriber: p95 ms [9999, 9999, 9999]
+PASS D4.5 ids strictly increasing per subscriber
+RESULT: 2 passed, 3 failed
+=== regression
+REGRESSION FAIL roles A6.15b wrong user on invited_username invite -> 403: expected 403, got 200 {"workspace_id": 14}
+REGRESSION FAIL roles A6.15c named user accepts: expected 200, got 404 {"error": "error"}
+REGRESSION FAIL roles A6.17 list excludes exhausted/expired/revoked: expected 200 and not any(i['code'] in ('blp2Mu0d585LoBoS','zUh7Fih915p7jEQ7','UNkyg6xg46HRJ25H','MfjHJ3HI2zkm3syQ','yo75DuDhO2IVW8QL') for i in d['invitations']), got 200 {"invitations": [{"code": "pt7OpHbRcoCpjhJs", "workspace_id": 14, "invited_user_id": 46, "expires_at
+REGRESSION FAIL channels B2.17 replies paged: expected 200 and len(d['replies'])==1 and isinstance(d['next_cursor'],str), got 200 {"replies": [{"id": 124, "channel_id": 38, "author_id": 35, "body": "r1", "parent_id": 113, "created
+REGRESSION FAIL channels B2.22 pins paged: expected 200 and len(d['pins'])==1 and isinstance(d['next_cursor'],str), got 200 {"pins": [{"message": {"message_id": 117, "pinned_by": 35, "pinned_at": "2026-11-14T03:35:35.960Z", 
+REGRESSION FAIL channels B2.24 private pins non-member -> 403: expected 403, got 200 {"pins": [], "next_cursor": null}
+REGRESSION FAIL channels B2.27 search other workspace empty: expected 200 and len(d['results'])==0, got 200 {"results": [{"id": 127, "channel_id": 38, "author_id": 35, "body": "zebra8291903629171 unique", "pa
+REGRESSION FAIL channels B3.3 in-word/email no match: expected 200 and d['messages'][0]['mentions']==[], got 200 {"messages": [{"id": 114, "channel_id": 34, "author_id": 31, "body": "mail foo@mem834425824950 and a
+REGRESSION: 15 broken

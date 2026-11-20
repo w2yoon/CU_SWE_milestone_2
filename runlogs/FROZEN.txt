@@ -1,0 +1,4 @@
+97d0e1875a1180cf173f6a01393b464910eba0a2  -
+05fff2837cb00f5402f05c68bc8824520df34d02  ../tools/chk.py
+60720492bf35602437bf2e4daab2c036c3c98ef9  ../tools/make_spec.py
+Fri Nov 13 19:39:36 EST 2026

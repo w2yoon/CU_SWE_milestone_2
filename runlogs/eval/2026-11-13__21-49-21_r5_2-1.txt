@@ -1,0 +1,189 @@
+=== c_1
+PASS C1.1 first reaction -> 200 {reactions}
+PASS C1.2 same reaction again is idempotent
+PASS C1.3 second user: 👍 count 2, 🎉 separate
+PASS C1.4 history carries reactions
+PASS C1.5 remove reaction -> 200, emoji with 0 disappears
+PASS C1.6 no token 401 / unknown message 404 / empty emoji 400
+PASS C1.7 non-member reacts in private channel -> 403
+FAIL C1.8 WS gets reaction.added x3 then reaction.removed, dense ids, fields: ([], [])
+PASS C1.9 reaction in archived channel -> 423
+PASS C1.10 create DM -> 200 {channel_id}
+PASS C1.11 same DM id both directions and repeated
+PASS C1.12 DM unknown user 404 / missing 400 / no token 401
+PASS C1.13 DM members post 201 and read 200
+PASS C1.14 third user cannot read/post DM -> 403
+RESULT: 13 passed, 1 failed
+=== c_2
+FAIL C2.1 upload -> 201 FileObj: expected 201, got 404 {}
+FAIL C2.2 file metadata on another node: expected 200, got 404 {}
+PASS C2.3 unknown file -> 404
+FAIL C2.4 download bytes + Content-Type + Content-Disposition: (404, b'{}', '')
+FAIL C2.5 upload > 10 MiB -> 413: expected 413, got 0 {"error": "URLError(BrokenPipeError(32, 'Broken pipe'))"}
+FAIL C2.6 no file part 400 / no token 401: (404, 401)
+FAIL C2.7 attach own file -> 201, message.files, also in history: expected 201, got 201 {"message": {"id": 5, "channel_id": 6, "author_id": 4, "author": {"id": 4, "username": "u0x21015057", "display_name": "u
+FAIL C2.8 attach the same file again -> 400: expected 400, got 201 {"message": {"id": 6, "channel_id": 6, "author_id": 4, "author": {"id": 4, "username": "u0x21015057", "display_name": "u
+FAIL C2.9 someone else's / unknown / non-list file_ids -> 400: (201, 201, 201)
+RESULT: 1 passed, 8 failed
+=== c_3
+PASS C3.1 /me keeps literal body
+FAIL C3.2 /me without text -> 400: (201, 201)
+FAIL C3.3 /shrug text appends emoticon: expected 201, got 201 {"message": {"id": 13, "channel_id": 8, "author_id": 6, "author": {"id": 6, "username": "u0x24200584", "display_name": "
+FAIL C3.4 /shrug alone: expected 201, got 201 {"message": {"id": 14, "channel_id": 8, "author_id": 6, "author": {"id": 6, "username": "u0x24200584", "display_name": "
+FAIL C3.5 /topic -> 201 message:null channel.topic; >250 -> 400: expected 201, got 201 {"message": {"id": 15, "channel_id": 8, "author_id": 6, "author": {"id": 6, "username": "u0x24200584", "display_name": "
+FAIL C3.6 /invite -> 201 invited_user, now member; unknown -> 404: expected 201, got 201 {"message": {"id": 17, "channel_id": 8, "author_id": 6, "author": {"id": 6, "username": "u0x24200584", "display_name": "
+FAIL C3.9 /archive by non-owner -> 403: (201, {'message': {'id': 19, 'channel_id': 8, 'author_id': 7, 'author': {'id': 7, 'username': 'u1x24200584', 'display_name': 'u1x24200584', 'timezone': 'UTC', '
+FAIL C3.7 /archive -> 201 channel archived, then post 423: expected 201, got 201 {"message": {"id": 20, "channel_id": 8, "author_id": 6, "author": {"id": 6, "username": "u0x24200584", "display_name": "
+FAIL C3.8 /unarchive while archived -> 201 is_archived false: expected 201, got 201 {"message": {"id": 23, "channel_id": 8, "author_id": 6, "author": {"id": 6, "username": "u0x24200584", "display_name": "
+FAIL C3.10 unknown command -> 400: expected 400, got 201 {"message": {"id": 24, "channel_id": 8, "author_id": 6, "author": {"id": 6, "username": "u0x24200584", "display_name": "
+PASS C3.11 //literal posted as-is
+RESULT: 2 passed, 9 failed
+=== c_4
+FAIL C4.1 member creates group -> 201 GroupObj: expected 201, got 404 {}
+FAIL C4.2 dup handle 409 / bad handle 400 / missing name 400: (404, 404, 404)
+FAIL C4.3 outsider 403 / no token 401 / unknown slug 404: (404, 401, 404)
+FAIL C4.4 list groups: expected 200, got 404 {}
+FAIL C4.5 creator patches group: expected 200, got 404 {}
+FAIL C4.6 other member 403 / owner 200 / unknown 404: (404, 404, 404)
+FAIL C4.7 delete: other 403 / creator 200 deleted / again 200: ((404, {}), (404, {}), (404, {}))
+FAIL C4.8 @group -> members in channel, minus author: expected 201, got 201 []
+FAIL C4.9 group + username deduped: expected 201, got 201 [10]
+FAIL C4.10 @here -> connected members only, minus author: expected 201, got 201 []
+PASS C4.11 @here after socket closed -> []
+RESULT: 1 passed, 10 failed
+=== c_5
+PASS C5.1 get user -> UserObj
+PASS C5.2 unknown 404 / no token 401
+PASS C5.3 patch profile, persisted across nodes
+FAIL C5.7 user.updated broadcast to an unsubscribed socket on another node, no channel_id/event_id: []
+PASS C5.4 partial patch keeps other fields
+FAIL C5.5 invalid timezone -> 400: expected 400, got 200 {"user": {"id": 14, "username": "p33782107", "display_name": "Pat Q", "timezone": "Mars/Olympus", "avatar_url": "https:/
+FAIL C5.6 length/type violations -> 400, nothing saved: [200, 200, 200, 200, 200, 200]
+RESULT: 4 passed, 3 failed
+=== e_1
+PASS E1.1 author edits -> 200, edited_at set
+PASS E1.2 history shows edit
+PASS E1.3 non-author (even owner) edit -> 403
+FAIL E1.4 blank 400 / unknown 404 / no token 401: (200, 404, 401)
+PASS E1.5 author deletes -> 200 deleted
+PASS E1.6 delete idempotent
+PASS E1.7 deleted gone from history; reply_count drops
+PASS E1.8 edit deleted message -> 409
+FAIL E1.9 owner deletes other's 200 / plain member 403: (200, 200)
+FAIL E1.10 WS message.updated (message) + message.deleted (message_id), dense: []
+FAIL E1.11 edit/delete in archived channel -> 423: (409, 423)
+RESULT: 7 passed, 4 failed
+=== e_2
+PASS E2.1 registration -> 001..005 then 422
+FAIL E2.2 bad or missing PASS -> 464: ([], [])
+FAIL E2.3 nick collision -> 433, connection stays, retry registers: ([':huddle 001 n14971421 :Welcome', ':huddle 002 n14971421 :Your host'], [':huddle 001 n14971421b :Welcome'])
+PASS E2.4 PING -> PONG :abc
+PASS E2.5 unknown command -> 421
+PASS E2.7 PONG/MODE/WHO/LIST/NAMES/TOPIC accepted (no 421)
+FAIL E2.6 QUIT closes without error numeric: [':huddle 002 n14971421b :Your host', ':huddle 003 n14971421b :Created', ':huddle 004 n14971421b :huddle', ':huddle 005 n14971421b :CHANTYPES=#', ':huddle 422 n
+RESULT: 4 passed, 3 failed
+=== e_3
+PASS E3.1 JOIN echo, then 353, then 366
+PASS E3.2 hyphenated/unknown channel -> 403
+PASS E3.3 IRC PRIVMSG stored as a message by the IRC user
+FAIL E3.4 IRC + web writes share a dense event_id stream: (-1, [])
+FAIL E3.5 web post fans out to IRC as :nick!user@host PRIVMSG: []
+PASS E3.5b no echo of own PRIVMSG
+FAIL E3.6 NAMES/WHO/LIST/MODE/TOPIC accepted; TOPIC -> 331/332: [':huddle 353 u0x13636288 = #w13636288/c13636288 :u0x13636288 u1x13636288', ':huddle 366 u0x13636288 #w13636288/c13636288 :End of NAMES']
+FAIL E3.7 IRC bridge survives a killed HTTP node (both directions): ([], ['irc after kill', 'after kill'])
+RESULT: 4 passed, 4 failed
+=== e_4
+PASS E4.1 GET / -> 200 text/html on 3 nodes
+FAIL E4.2 initial HTML has every static data-testid and DOM id: missing ['workspace-create-form', 'empty-state-create-workspace', 'join-workspace-form', 'join-workspace-submit', 'dms-list', 'new-channel-btn', 'current-user',
+FAIL E4.3 data-button-role on every pinned button: wrong/missing ['send-btn', 'thread-send', 'create-channel-submit', 'join-workspace-submit', 'workspace-general-submit', 'create-invitation-submit', 'channel-top
+FAIL E4.4 computed button colours match roles: wrong [['send-btn', 'missing'], ['thread-send', 'missing'], ['create-channel-submit', 'missing'], ['join-workspace-submit', 'missing']]
+FAIL E4.5 auth modal visible; toggle login<->register: auth-modal not visible
+FAIL E4.6 invalid sign-up shows visible error: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E4.7 valid sign-up auto-logs in: Locator.fill: Timeout 3000ms exceeded.
+FAIL E4.8 create workspace from empty state; #general listed and selected: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E4.9 create channel via modal; duplicate shows error: Locator.click: Timeout 3000ms exceeded.
+FAIL E4.10 switch channel updates header: Locator.click: Timeout 3000ms exceeded.
+FAIL E4.11 logout + login restores the same workspace: Locator.click: Timeout 3000ms exceeded.
+RESULT: 1 passed, 10 failed
+=== e_5
+FAIL E5.1 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.2 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.3 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.4 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.5 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.6 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.7 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.8 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.9 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+RESULT: 0 passed, 9 failed
+=== d_1
+PASS D1.1 health + node_id on 3 nodes
+PASS D1.2 redis answers PING on 6379
+PASS D1.3 invalid-token WebSocket rejected
+PASS D1.4 nodes 8000/8002 serve reads+writes while 8001 is dead
+PASS D1.5 8001 back within 10 s and sees outage writes
+PASS D1.6 redis respawned within 5 s after SIGKILL
+RESULT: 6 passed, 0 failed
+=== d_2
+FAIL D2.1 sockets on 8000/8002 survive killing 8001: 
+FAIL D2.2 writes 201 while 8001 down; both subscribers get dense ids: ([201, 201], [], [])
+FAIL D2.3 resume on 8002 replays both, then resumed: []
+FAIL D2.4 after 8000 dies, resume on 8001 gets the 2 missed events: ([201, 201], [])
+FAIL D2.5 post on restarted 8001 reaches subscriber on 8002 live: []
+FAIL D2.6 same head_event_id on all three nodes: [None, None, None]
+RESULT: 0 passed, 6 failed
+=== d_3
+PASS D3.1 writes on all nodes succeed within 5 s of redis kill
+FAIL D3.2 both subscribers receive all 3 frames: ([], [])
+FAIL D3.3 ids dense and identical across sockets: (-1, [], [])
+PASS D3.4 redis respawned within 5 s
+FAIL D3.5 fan-out after respawn: ([], [])
+RESULT: 2 passed, 3 failed
+=== d_4
+PASS D4.1 all 75 concurrent POSTs -> 201
+FAIL D4.2 each subscriber got >= 99% of frames (frames carry message.body): [0, 0, 0]
+FAIL D4.3 median latency <= 300 ms per subscriber: median ms [9999, 9999, 9999]
+FAIL D4.4 p95 latency <= 800 ms per subscriber: p95 ms [9999, 9999, 9999]
+PASS D4.5 ids strictly increasing per subscriber
+RESULT: 2 passed, 3 failed
+=== regression
+REGRESSION FAIL channels B1.26 write after unarchive: expected 201, got 404 {}
+REGRESSION FAIL channels B2.1 empty body -> 400: expected 400, got 404 {}
+REGRESSION FAIL channels B2.4 post 201 MessageObj fields: expected 201 and all(k in d['message'] for k in ('id','channel_id','author_id','author','body','parent_id','reply_count','created_at','edited_at','files','reactions','mentions')) and d['message']['reply_count']==0 and d['message']['parent_id'] is None and d['message']['created_at'].endswith('Z'), got 404 {}
+REGRESSION FAIL channels B2.5 page1 newest-first + cursor: expected 200 and [m['id'] for m in d['messages']]==[,] and isinstance(d['next_cursor'],str), got 404 {}
+REGRESSION FAIL channels B2.6 page2 on another node, stable under new msg: expected 200 and [m['id'] for m in d['messages']]==[,] and isinstance(d['next_cursor'],str), got 404 {}
+REGRESSION FAIL channels B2.7 last page next_cursor null: expected 200 and [m['id'] for m in d['messages']]==[] and d['next_cursor'] is None, got 404 {}
+REGRESSION FAIL channels B2.8 default limit returns all newest-first: expected 200 and [m['id'] for m in d['messages']][:2]==[,] and len(d['messages'])==6 and d['next_cursor'] is None, got 404 {}
+REGRESSION FAIL channels B2.9 limit=0 -> 400: expected 400, got 404 {}
+REGRESSION FAIL channels B2.10 limit=201 -> 400: expected 400, got 404 {}
+REGRESSION FAIL channels B2.11 limit=abc -> 400: expected 400, got 404 {}
+REGRESSION FAIL channels B2.12 malformed cursor -> 400: expected 400, got 404 {}
+REGRESSION FAIL channels B2.13 limit=200 ok: expected 200, got 404 {}
+REGRESSION FAIL channels B2.15 reply 201 with parent_id: expected 201 and d['message']['parent_id']==, got 404 {}
+REGRESSION FAIL channels B2.16 replies oldest-first: expected 200 and [m['id'] for m in d['replies']]==[,] and d['next_cursor'] is None, got 400 {"error": "invalid literal for int() with base 10: ''"}
+REGRESSION FAIL channels B2.17 replies paged: expected 200 and len(d['replies'])==1 and isinstance(d['next_cursor'],str), got 400 {"error": "invalid literal for int() with base 10: ''"}
+REGRESSION FAIL channels B2.18 parent reply_count==2: expected 200 and [m for m in d['messages'] if m['id']==][0]['reply_count']==2, got 404 {}
+REGRESSION FAIL channels B2.19 pin: expected 200 and d['pin']['message_id']== and 'pinned_by' in d['pin'] and 'pinned_at' in d['pin'], got 400 {"error": "invalid literal for int() with base 10: ''"}
+REGRESSION FAIL channels B2.20 pin idempotent: expected 200, got 400 {"error": "invalid literal for int() with base 10: ''"}
+REGRESSION FAIL channels B2.21 pins newest-first: expected 200 and [p['message']['id'] for p in d['pins']]==[,] and all(k in d['pins'][0] for k in ('message','pinned_by','pinned_at')) and 'next_cursor' in d, got 404 {}
+REGRESSION FAIL channels B2.22 pins paged: expected 200 and len(d['pins'])==1 and isinstance(d['next_cursor'],str), got 404 {}
+REGRESSION FAIL channels B2.23 unpin: expected 200 and d['unpinned']==True, got 400 {"error": "invalid literal for int() with base 10: ''"}
+REGRESSION FAIL channels B2.24 private pins non-member -> 403: expected 403, got 404 {}
+REGRESSION FAIL channels B2.25 search finds message: expected 200 and len(d['results'])==1 and 'next_cursor' in d, got 200 {"results": [], "next_cursor": null}
+REGRESSION FAIL channels B2.26 search workspace_id filter: expected 200 and len(d['results'])==1, got 200 {"results": [], "next_cursor": null}
+REGRESSION FAIL channels B2.29 search shows private to member: expected 200 and len(d['results'])==1, got 200 {"results": [], "next_cursor": null}
+REGRESSION FAIL channels B3.1 @username -> id: expected 200 and d['messages'][0]['mentions']==[], got 404 {}
+REGRESSION FAIL channels B3.2 deduped: expected 200 and d['messages'][0]['mentions']==[], got 404 {}
+REGRESSION FAIL channels B3.3 in-word/email no match: expected 200 and d['messages'][0]['mentions']==[], got 404 {}
+REGRESSION FAIL channels B3.4 no self mention: expected 200 and d['messages'][0]['mentions']==[], got 404 {}
+REGRESSION FAIL channels B3.5 non-workspace-member excluded: expected 200 and d['messages'][0]['mentions']==[], got 404 {}
+REGRESSION FAIL channels B3.6 @channel = members except author: expected 200 and sorted(d['messages'][0]['mentions'])==sorted([,]), got 404 {}
+REGRESSION FAIL channels B3.7 post response carries mentions (no self): expected 201 and sorted(d['message']['mentions'])==sorted([31,]), got 401 {"error": "auth"}
+REGRESSION FAIL channels B3.8 read_state shape: expected 200 and all(k in d['read_state'] for k in ('channel_id','last_read_event_id','unread_count','mention_count')) and d['read_state']['channel_id']==, got 401 {"error": "auth"}
+REGRESSION FAIL channels B3.9 member unread/mention counts: expected 200 and d['read_state']['unread_count']>=6 and d['read_state']['mention_count']>=3, got 401 {"error": "auth"}
+REGRESSION FAIL channels B3.10 owner: self-mentions not counted: expected 200 and d['read_state']['mention_count']==1, got 404 {}
+REGRESSION FAIL channels B3.11 advance cursor: expected 200 and d['read_state']['last_read_event_id']==4, got 401 {"error": "auth"}
+REGRESSION FAIL channels B3.12 never moves backwards: expected 200 and d['read_state']['last_read_event_id']==4, got 401 {"error": "auth"}
+REGRESSION FAIL channels B3.13 unread decreased after read: expected 200 and d['read_state']['unread_count']<6, got 401 {"error": "auth"}
+REGRESSION FAIL channels B3.14 workspace detail embeds read_state: expected 200 and 'read_state' in d and d['read_state'] is not None, got 401 {"error": "auth"}
+REGRESSION: 127 broken

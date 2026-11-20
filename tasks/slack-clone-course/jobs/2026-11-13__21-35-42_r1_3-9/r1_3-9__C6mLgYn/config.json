@@ -1,0 +1,19 @@
+{
+    "task": {
+        "path": "/Users/syoonj./W2Y/CU_SWdev_AI/course_milestone_2/tasks/slack-clone-course/par/r1_3-9"
+    },
+    "trial_name": "r1_3-9__C6mLgYn",
+    "trials_dir": "/Users/syoonj./W2Y/CU_SWdev_AI/course_milestone_2/tasks/slack-clone-course/jobs/2026-11-13__21-35-42_r1_3-9",
+    "agent": {
+        "name": "mini_swe_agent_local:MiniSweAgentLocal",
+        "model_name": "openai/gpt-5.6-luna",
+        "kwargs": {
+            "cost_limit": 3,
+            "config_file": "/Users/syoonj./W2Y/CU_SWdev_AI/course_milestone_2/tasks/slack-clone-course/course-staff-files/final_task/agent_llm_config/mswea-openai-gpt-5.6-luna-no-reasoning.yaml"
+        }
+    },
+    "verifier": {
+        "disable": true
+    },
+    "job_id": "fb6725fc-7bfe-4055-b5cd-189374cfd1e7"
+}

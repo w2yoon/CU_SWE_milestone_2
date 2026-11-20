@@ -1,0 +1,24 @@
+=== e_4
+PASS E4.1 GET / -> 200 text/html on 3 nodes
+PASS E4.2 initial HTML has every static data-testid and DOM id
+FAIL E4.3 data-button-role on every pinned button: wrong/missing ['thread-send', 'close-thread']
+PASS E4.4 computed button colours match roles
+FAIL E4.5 auth modal visible; toggle login<->register: modes ['login', 'login', 'login']
+PASS E4.6 invalid sign-up shows visible error
+FAIL E4.7 valid sign-up auto-logs in: Page.wait_for_function: Timeout 3000ms exceeded.
+FAIL E4.8 create workspace from empty state; #general listed and selected: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E4.9 create channel via modal; duplicate shows error: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E4.10 switch channel updates header: Locator.click: Timeout 3000ms exceeded.
+FAIL E4.11 logout + login restores the same workspace: Page.wait_for_function: Timeout 3000ms exceeded.
+RESULT: 4 passed, 7 failed
+=== e_5
+FAIL E5.1 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.2 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.3 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.4 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.5 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.6 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.7 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.8 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+FAIL E5.9 setup: load /?token= and open the channel entry: Locator.wait_for: Timeout 3000ms exceeded.
+RESULT: 0 passed, 9 failed

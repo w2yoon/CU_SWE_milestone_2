@@ -1,0 +1,76 @@
+# Slack clone — milestone 2: read this first
+
+Read this whole file first, then the files it names. `/spec` is read-only: never edit, move or delete anything in `/spec`, including the checks. If a check fails, fix the code, not the check. `/app` is where your code goes. The task description you were given is still the grading contract; `/spec` tells you what to build now, in what order, and how to prove it works.
+
+## Scope
+
+{{SCOPE}}
+
+Anything in the task description that is not named in this file or in the files below is out of scope for this run: do not spend time on it.
+
+## Architecture (required)
+
+`/app` starts **empty** (only `timer.sh`, which you must leave alone). Create, in `/app`:
+
+- `start.sh` (executable): `exec python3 /app/supervisor.py`. It must stay in the foreground.
+- `supervisor.py`: writes its PID to `/tmp/supervisor.pid`; starts three copies of `/app/server.py` with env `NODE_ID`=0/1/2 and `PORT`=8000/8001/8002, plus `redis-server --bind 127.0.0.1 --port 6379 --save "" --appendonly no`, plus (once you build an IRC gateway) `python3 /app/irc.py`; every child gets `start_new_session=True` and a log `/tmp/huddle-<name>.log`; every ≤ 0.5 s it restarts any child that exited; on SIGTERM/SIGINT it kills its children by their saved PIDs and exits.
+- `server.py`: Python standard library only (`http.server.ThreadingHTTPServer` with `daemon_threads = True`, bound to `127.0.0.1:$PORT`; `sqlite3`). All processes use ONE shared SQLite file `/app/huddle.db` (WAL, `busy_timeout` 5000). Put shared code (db, auth, messages, events) in modules next to it, e.g. `core.py`, so `irc.py` can reuse it. Keep `/app/requirements.txt` (it may be empty).
+- Cross-node delivery: every durable channel change runs in ONE `BEGIN IMMEDIATE` transaction that changes the data, bumps `channel_seq.last_event_id` by 1 and inserts the row into `events(channel_id, event_id, type, payload_json)`. Every WebSocket thread and the IRC gateway poll `events` (every 50 ms) and forward new rows. No process keeps shared state in memory; Redis is not on the delivery path.
+
+## How to run things (every command is killed after 30 s — never run a server in the foreground)
+
+```bash
+kill $(cat /tmp/supervisor.pid) 2>/dev/null; sleep 1; (cd /app && nohup ./start.sh >/tmp/cluster.log 2>&1 </dev/null &) >/dev/null 2>&1; sleep 2; curl -s 127.0.0.1:8000/api/health
+tail -n 30 /tmp/huddle-0.log        # node 0 stderr; look here on any 500 or crash
+```
+
+Restart the cluster this way after every code change, before running a check. Never kill processes by name (`pkill`, `killall`, `pgrep -f`, `ps | grep`): that can kill you. Kill only by a saved PID or the PID that owns a port (`ss -ltnp 'sport = :8001'`). If a port stays busy after a restart, find its owner with `ss -ltnp` and kill that PID.
+
+Each check starts the cluster itself if it is not answering, prints its test results, ends with a line like `RESULT: 12 passed, 0 failed`, and finishes in under 30 s. Run each check as its own command. Check the time left with `bash /app/timer.sh`.
+
+## Common mistakes (avoid)
+
+- Order of errors on every route: unauthenticated → 401 first, unknown id/slug → 404, permission → 403, body validation → 400.
+- Wrong envelope key (`{"member":...}`, `{"replies":...}`, `{"reactions":...}`, `{"group":...}`, `{"file":...}`).
+- Any state in Python globals: nodes are separate processes and any of them may be killed at any moment.
+- Read-then-write races on counters (event ids, invitation uses): one `BEGIN IMMEDIATE` transaction, test `rowcount`.
+- A handler exception must return a JSON error (`400` for bad input, `500` only for real bugs), never drop the connection; non-numeric path ids → `404`, non-object JSON bodies → `400`.
+- Schema without `IF NOT EXISTS` (all processes start at once).
+- Writing one huge file in one command: write `server.py` in several smaller steps (`cat > ... <<'EOF'` then `cat >> ...`), and run `python3 -m py_compile` after each.
+<!--IF:basics-->
+
+## Basics to build first (C, D and E depend on them)
+
+Build only these parts of the task description, with exactly the shapes it gives (they are not checked on their own here, but every check below uses them):
+
+- `GET /api/health` → `200 {"status":"ok","node_id":N}`; `POST /api/auth/register {username,password,display_name?}` → `201 {user,token}` (409 duplicate, 400 bad username/short password); `POST /api/auth/login` → `200 {user,token}`; `GET /api/auth/me`. `UserObj` = `{id, username, display_name, timezone, avatar_url, status_text, status_emoji}`.
+- `POST /api/workspaces {slug,name}` → `201 {workspace, general_channel}` (creator is `owner`, member of `#general`); `GET /api/workspaces`; `GET /api/workspaces/{slug}` → `{workspace, channels, read_state}`; `GET /api/workspaces/{slug}/members` → `{members:[{user_id, role}]}`.
+- `POST /api/workspaces/{slug}/channels {name,is_private?,topic?}` → `201 {channel}` (any workspace member may create a public channel; only owner/admin a private one; 409 duplicate name); `POST /api/channels/{id}/join` (open workspace: a non-member becomes a workspace `member`; private channel → 403); `POST /api/channels/{id}/leave`; `GET /api/channels/{id}/members` → `{members:[UserObj]}`; `PATCH /api/channels/{id} {topic}`; `POST /api/channels/{id}/archive` / `unarchive` (workspace owner only; writes to an archived channel → 423).
+- `POST /api/channels/{id}/messages {body,parent_id?}` → `201 {message}` (blank body 400, non-member 403); `GET /api/channels/{id}/messages` → `{messages, next_cursor}` newest-first, top-level only; `GET /api/messages/{id}/replies` → `{replies, next_cursor}` oldest-first. `MessageObj` = `{id, channel_id, author_id, author, body, parent_id, reply_count, created_at, edited_at, files, reactions, mentions}`; `mentions` = ids of `@username` (workspace members only, not in-word, not the author, deduped) and `@channel` (all channel members but the author).
+- WebSocket `ws://127.0.0.1:<port>/api/ws?token=<bearer>` (bad token → `401`, never `101`): client `{"type":"subscribe","channel_id":N}` → `{"type":"subscribed","channel_id":N,"head_event_id":H}`; `{"type":"resume","channel_id":N,"since_event_id":K}` → every stored event with `event_id > K` in order, then `{"type":"resumed","channel_id":N,"head_event_id":H}`. Durable frames are `{type, event_id, channel_id, ...}` with dense per-channel ids, for `message.created`/`message.reply` (carry `message`), `message.updated`, `message.deleted`, `reaction.added`, `reaction.removed`, `member.joined`, `member.left`, `channel.updated`, `channel.archived`, `channel.unarchived`. Server frames are unmasked text frames (7/16/64-bit lengths).
+<!--END-->
+<!--IF:regression-->
+
+## The A and B regression suite
+
+`bash /spec/checks/regression.sh` re-tests every rule of components A (auth, workspaces, roles, invitations) and B (channels, messages, pagination, pins, search, mentions, read state, durable WebSocket events), plus the cluster baseline. It prints one `REGRESSION FAIL ...` line per broken rule, then a total such as `REGRESSION: 0 broken`. The task description gives the exact shape of every route it tests.
+<!--END-->
+
+## Files
+
+{{FILES}}
+
+## Order of work (strict)
+
+{{ORDER}}
+
+## Before you submit
+
+You may run `echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT` only when all of these are true, from output you actually saw in this session, against a freshly restarted cluster:
+
+{{GATE}}
+- `./start.sh` boots cleanly from a cold start (stop everything, start, wait 3 s, all three health endpoints answer `200`).
+
+If some checks still fail near the time limit, submit the state with the fewest failures that still boots cleanly. Never trade a booting cluster for a feature.
+
+Time guide (50 min total; check with `bash /app/timer.sh`): {{TIME}}
